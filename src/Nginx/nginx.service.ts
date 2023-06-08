@@ -47,7 +47,7 @@ export class NginxService {
 
   private async reloadServer(): Promise<void> {
     return new Promise((resolve, reject) => {
-      exec('/etc/init.d/nginx reload', (err) => {
+      exec('sudo /etc/init.d/nginx reload', (err) => {
         if(err) {
           console.error(err)
           reject(new HttpException('failed to reload nginx server', HttpStatus.INTERNAL_SERVER_ERROR))
@@ -121,8 +121,6 @@ export class NginxService {
     if(!currentRule) throw new HttpException(`no rule found with id ${id}`, HttpStatus.NOT_FOUND)
     
     const oldRuleString = this.makeRule(currentRule)
-    console.log(oldRuleString)
-    console.log(content.includes(oldRuleString))
     content = content.replace(oldRuleString, '')
 
     await writeFile(this.configService.get<string>('CONFIG_FILE_PATH'), content)
