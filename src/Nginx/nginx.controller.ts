@@ -3,34 +3,35 @@ import {NginxRo} from "./dto/nginx-ro";
 import {NginxService} from "./nginx.service";
 import {NginxCreateDto} from "./dto/nginx-create-dto";
 import {NginxUpdateDto} from "./dto/nginx-update-dto";
+import { ParseIntPipe } from '@nestjs/common';
 
 @Controller('nginx')
 export class NginxController {
   constructor(private nginxService: NginxService) {}
 
   @Get('/all')
-  getAllRules(): NginxRo[] {
+  async getAllRules(): Promise<NginxRo[]> {
     return this.nginxService.findAll()
   }
 
-  @Get('/byName/:name')
-  getByName(@Param('name') name: string): NginxRo {
-    return this.nginxService.findByName(name)
+  @Get('/:id')
+  async getByName(@Param('id', new ParseIntPipe()) id: number): Promise<NginxRo> {
+    return this.nginxService.findById(id)
   }
 
   @Post()
-  create(@Body() createDto: NginxCreateDto): NginxRo{
+  async create(@Body() createDto: NginxCreateDto): Promise<void> {
     return this.nginxService.create(createDto)
   }
 
-  @Patch('/byName/:name')
-  updateByName(@Param('name') name: string, @Body() updateDto: NginxUpdateDto) : NginxRo {
-    return this.nginxService.update(name, updateDto)
+  @Patch('/:id')
+  async updateByName(@Param('id', new ParseIntPipe()) id: number, @Body() updateDto: NginxUpdateDto) : Promise<void> {
+    return this.nginxService.update(id, updateDto)
   }
 
-  @Delete('/byName/:name')
-  deleteByName(@Param('name') name: string): boolean {
-    return this.nginxService.delete(name)
+  @Delete('/:id')
+  async deleteByName(@Param('id', new ParseIntPipe()) id: number): Promise<void> {
+    return this.nginxService.delete(id)
   }
 
 }
