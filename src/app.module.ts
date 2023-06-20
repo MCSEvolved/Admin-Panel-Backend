@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import {NginxModule} from "./Nginx/nginx.module";
+import { DockerModule } from './Docker/docker.module';
 
 @Module({
   imports: [
@@ -9,6 +10,7 @@ import {NginxModule} from "./Nginx/nginx.module";
       isGlobal: true
     }),
     NginxModule,
+    DockerModule
   ]
 })
 export class AppModule {}
