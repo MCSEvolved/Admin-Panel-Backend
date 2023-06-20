@@ -3,20 +3,19 @@ import {DockerRo} from "./dto/docker-ro";
 import {DockerService} from "./docker.service";
 import {DockerCreateDto} from "./dto/docker-create-dto";
 import {DockerUpdateDto} from "./dto/docker-update-dto";
-import { ParseIntPipe } from '@nestjs/common';
 
 @Controller('docker')
 export class DockerController {
   constructor(private dockerService: DockerService) {}
 
   @Get('/all')
-  async getAllRules(): Promise<DockerRo[]> {
+  async getAllServices(): Promise<DockerRo[]> {
     return this.dockerService.findAll()
   }
 
-  @Get('/:id')
-  async getByName(@Param('id', new ParseIntPipe()) id: number): Promise<DockerRo> {
-    return this.dockerService.findById(id)
+  @Get('/:name')
+  async getServiceById(@Param('name') name: string): Promise<DockerRo> {
+    return this.dockerService.findByName(name)
   }
 
   @Post()
@@ -24,14 +23,29 @@ export class DockerController {
     return this.dockerService.create(createDto)
   }
 
-  @Patch('/:id')
-  async updateByName(@Param('id', new ParseIntPipe()) id: number, @Body() updateDto: DockerUpdateDto) : Promise<void> {
-    return this.dockerService.update(id, updateDto)
+  @Patch('/:name')
+  async updateById(@Param('name') name: string, @Body() updateDto: DockerUpdateDto) : Promise<void> {
+    return this.dockerService.update(name, updateDto)
   }
 
-  @Delete('/:id')
-  async deleteByName(@Param('id', new ParseIntPipe()) id: number): Promise<void> {
-    return this.dockerService.delete(id)
+  @Patch('/:name/up')
+  async startService(@Param('name') name: string): Promise<void> {
+    return this.dockerService.composeStart(name)
+  }
+
+  @Patch('/:name/down')
+  async stopService(@Param('name') name: string): Promise<void> {
+    return this.dockerService.composeStop(name)
+  }
+
+  @Patch('/:name/restart')
+  async restartService(@Param('name') name: string): Promise<void> {
+    return this.dockerService.composeRestart(name)
+  }
+
+  @Delete('/:name')
+  async deleteById(@Param('name') name: string): Promise<void> {
+    return this.dockerService.delete(name)
   }
 
 }
