@@ -28,12 +28,12 @@ export class DockerController {
     return this.dockerService.update(name, updateDto)
   }
 
-  @Patch('/:name/up')
+  @Patch('/:name/start')
   async startService(@Param('name') name: string): Promise<void> {
     return this.dockerService.composeStart(name)
   }
 
-  @Patch('/:name/down')
+  @Patch('/:name/stop')
   async stopService(@Param('name') name: string): Promise<void> {
     return this.dockerService.composeStop(name)
   }
