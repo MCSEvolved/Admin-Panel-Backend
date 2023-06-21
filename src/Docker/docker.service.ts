@@ -10,13 +10,13 @@ import { exec } from "child_process";
 import { parse } from 'yaml'
 import {ComposeSpecification} from "./docker-compose-spec";
 import { rmSync, writeFileSync } from 'fs';
-import path from 'node:path';
+import {join} from 'node:path';
 
 @Injectable()
 export class DockerService {
   constructor(private configService: ConfigService) {}
   public async findAll(): Promise<DockerRo[]> {
-    const list: {Name: string, Status: string}[] = await new Promise((resolve, reject) => {
+    const list: {Name: string, Status: string, ConfigFiles: string}[] = await new Promise((resolve, reject) => {
       exec('sudo docker compose ls -a --format json', (err, json) => {
         if(err) {
           console.error(err)
@@ -31,6 +31,7 @@ export class DockerService {
       ro.push({
         serviceName: service.Name,
         status: service.Status,
+        configFilePath: service.ConfigFiles
       })
     })
 
@@ -54,47 +55,48 @@ export class DockerService {
     //try to parse the yaml to make sure it is valid
     this.getYaml(createDto.composeData)
     const dir = this.configService.get<string>('DOCKER_COMPOSE_DIR')
-    const ymlPath = path.join(dir, `${createDto.serviceName}.yml`)
+    const ymlPath = join(dir, `${createDto.serviceName}.yml`)
     writeFileSync(ymlPath, createDto.composeData)
     
-    return new Promise((resolve) => {
-      exec(`sudo docker compose -f ${ymlPath} create`, () => resolve())
+    return new Promise((resolve, reject) => {
+      exec(`sudo docker compose -f ${ymlPath} -p ${createDto.serviceName} create`, (err) => {
+        if(err) reject(new HttpException(`failed to create service, err: ${err}`, HttpStatus.INTERNAL_SERVER_ERROR))
+        resolve()
+      })
     })
   }
 
   public async update(name: string, updateDto: DockerUpdateDto): Promise<void> {
     //try to parse the yaml to make sure it is valid
     this.getYaml(updateDto.composeData)
-    const dir = this.configService.get<string>('DOCKER_COMPOSE_DIR')
-    const ymlPath = path.join(dir, `${name}.yml`)
-    writeFileSync(ymlPath, updateDto.composeData)
+    const {configFilePath} = await this.findByName(name)
+    writeFileSync(configFilePath, updateDto.composeData)
   }
 
   public async delete(name: string): Promise<void> {
-    const dir = this.configService.get<string>('DOCKER_COMPOSE_DIR')
-    const ymlPath = path.join(dir, `${name}.yml`)
-    rmSync(ymlPath)
+    const {configFilePath} = await this.findByName(name)
+    rmSync(configFilePath)
 
     return new Promise((resolve) => {
-      exec(`sudo docker compose down -p ${name}`, () => resolve())
+      exec(`sudo docker compose -p ${name} down`, () => resolve())
     })
   }
 
   public async composeStart(name: string): Promise<void> {
     return new Promise((resolve) => {
-      exec(`sudo docker compose start -p ${name}`, () => resolve())
+      exec(`sudo docker compose -p ${name} start`, () => resolve())
     })
   }
 
   public async composeStop(name: string): Promise<void> {
     return new Promise((resolve) => {
-      exec(`sudo docker compose stop -p ${name}`, () => resolve())
+      exec(`sudo docker compose -p ${name} stop`, () => resolve())
     })
   }
 
   public async composeRestart(name: string): Promise<void> {
     return new Promise((resolve) => {
-      exec(`sudo docker compose restart -p ${name}`, () => resolve())
+      exec(`sudo docker compose -p ${name} restart`, () => resolve())
     })
   }
 
@@ -103,13 +105,13 @@ export class DockerService {
   private getYaml(yamlString: string): ComposeSpecification {
     const composeConfig = parse(yamlString) as ComposeSpecification
     if(composeConfig.networks) {
-      Object.values(composeConfig.networks).forEach(network => {
-        if(network.external) throw new HttpException(`external networks are not allowed`, HttpStatus.BAD_REQUEST)
+      Object.entries(composeConfig.networks).forEach(([network_name, network]) => {
+        if(network?.external && (network.name !== "mcs_net" || (!network.name && network_name !== "mcs_net"))) throw new HttpException(`only "mcs_net" is allowed as external network`, HttpStatus.BAD_REQUEST)
       })
     }
     if(composeConfig.volumes){
       Object.values(composeConfig.volumes).forEach(volume => {
-        if(volume.external) throw new HttpException(`external volumes are not allowed`, HttpStatus.BAD_REQUEST)
+        if(volume?.external) throw new HttpException(`external volumes are not allowed`, HttpStatus.BAD_REQUEST)
       })
     }
     return composeConfig;
