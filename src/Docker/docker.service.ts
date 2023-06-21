@@ -52,7 +52,7 @@ export class DockerService {
     writeFileSync(ymlPath, createDto.composeData)
     
     return new Promise((resolve) => {
-      exec(`sudo docker compose -f ${ymlPath} create`, () => resolve())
+      exec(`sudo docker compose -f ${ymlPath} -p ${createDto.serviceName} create`, () => resolve())
     })
   }
 
