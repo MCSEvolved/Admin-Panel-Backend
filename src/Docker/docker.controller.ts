@@ -18,6 +18,11 @@ export class DockerController {
     return this.dockerService.findByName(name)
   }
 
+  @Get('/:name/logs')
+  async getServiceLogsById(@Param('name') name: string): Promise<string> {
+    return this.dockerService.findLogsByName(name)
+  }
+
   @Post()
   async create(@Body() createDto: DockerCreateDto): Promise<void> {
     return this.dockerService.create(createDto)

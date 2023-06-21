@@ -44,6 +44,12 @@ export class DockerService {
     }
   }
 
+  public async findLogsByName(name: string): Promise<string> {
+    return new Promise((resolve) => {
+      exec(`sudo docker compose -p ${name} logs`, (err, logs) => resolve(logs))
+    })
+  }
+
   public async create(createDto: DockerCreateDto): Promise<void> {
     //try to parse the yaml to make sure it is valid
     this.getYaml(createDto.composeData)
