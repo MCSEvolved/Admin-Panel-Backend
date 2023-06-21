@@ -99,8 +99,8 @@ export class DockerService {
   private getYaml(yamlString: string): ComposeSpecification {
     const composeConfig = parse(yamlString) as ComposeSpecification
     if(composeConfig.networks) {
-      Object.values(composeConfig.networks).forEach(network => {
-        if(network?.external && network.name !== "mcs_net") throw new HttpException(`only "mcs_net" is allowed as external network`, HttpStatus.BAD_REQUEST)
+      Object.entries(composeConfig.networks).forEach(([network_name, network]) => {
+        if(network?.external && (network.name !== "mcs_net" || (!network.name && network_name !== "mcs_net"))) throw new HttpException(`only "mcs_net" is allowed as external network`, HttpStatus.BAD_REQUEST)
       })
     }
     if(composeConfig.volumes){
