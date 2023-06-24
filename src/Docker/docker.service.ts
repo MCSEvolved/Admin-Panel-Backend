@@ -2,15 +2,16 @@ import { Injectable } from '@nestjs/common';
 import {DockerRo} from "./dto/docker-ro";
 import {DockerUpdateDto} from "./dto/docker-update-dto";
 import {DockerCreateDto} from "./dto/docker-create-dto";
-import { readFile, writeFile } from 'fs/promises';
 import { ConfigService } from '@nestjs/config';
 import { HttpStatus } from '@nestjs/common';
 import { HttpException } from '@nestjs/common';
-import { exec } from "child_process";
+import { exec, spawn } from "child_process";
 import { parse } from 'yaml'
 import {ComposeSpecification} from "./docker-compose-spec";
 import { rmSync, writeFileSync } from 'fs';
 import {join} from 'node:path';
+import Convert from 'ansi-to-html'
+const convert = new Convert()
 
 @Injectable()
 export class DockerService {
@@ -47,7 +48,10 @@ export class DockerService {
 
   public async findLogsByName(name: string): Promise<string> {
     return new Promise((resolve) => {
-      exec(`sudo docker compose -p ${name} logs`, (err, logs) => resolve(logs))
+      let allLogs = ""
+      const cmd = spawn("/bin/docker", ['compose', '--ansi=always', '-p', name, 'logs'])
+      .on("exit", () => resolve(allLogs))
+      cmd.stdout.on('data', data => {allLogs += convert.toHtml(`${data}`)})
     })
   }
 
