@@ -21,7 +21,7 @@ export class NginxService {
 
   private parseRules(configString: string): NginxRo[] {
     const matches = configString.matchAll(
-      /#id=(?<id>.*)\n\s*#serviceName=(?<serviceName>.+)\n\s*location (?<location>.+) {\n\s*proxy_pass http:\/\/localhost:(?<port>[0-9]+)/g
+      /#id=(?<id>.*)\n\s*#serviceName=(?<serviceName>.+)\n\s*location (?<location>.+) {\n\s*proxy_pass http:\/\/localhost:(?<port>[0-9]+);.*\n.*}(?<websocketsEnabled>\n.*location \/.*\/ws .*{\n.*proxy_pass http:\/\/localhost:....\/ws;)?/g
     )
     const rules: NginxRo[] = []
     for(const match of matches) {
@@ -30,19 +30,30 @@ export class NginxService {
         serviceName: match.groups.serviceName,
         location: match.groups.location,
         port: parseInt(match.groups.port),
-        websocketsEnabled: false,
+        websocketsEnabled: !!match.groups.websocketsEnabled,
       })
     }
     return rules
   }
 
   private makeRule(rule: NginxRo): string {
-    return `
+    let ruleString = `
     #id=${rule.id}
     #serviceName=${rule.serviceName}
     location ${rule.location} {
         proxy_pass http://localhost:${rule.port};
     }`
+    console.log(rule.websocketsEnabled)
+    if(rule.websocketsEnabled) {
+      ruleString += `
+    location ${rule.location}/ws {
+      proxy_pass http://localhost:${rule.port}/ws;
+      proxy_http_version 1.1;
+      proxy_set_header Upgrade $http_upgrade;
+      proxy_set_header Connection "upgrade";
+    }`
+    }
+    return ruleString
   }
 
   private async reloadServer(): Promise<void> {
@@ -104,7 +115,7 @@ export class NginxService {
       port: currentRule.port,
       serviceName: updateDto.serviceName || currentRule.serviceName,
       location: updateDto.location || currentRule.location,
-      websocketsEnabled: false
+      websocketsEnabled: updateDto.websocketsEnabled
     })
 
     content = content.replace(oldRuleString, newRuleString)
@@ -121,6 +132,7 @@ export class NginxService {
     if(!currentRule) throw new HttpException(`no rule found with id ${id}`, HttpStatus.NOT_FOUND)
     
     const oldRuleString = this.makeRule(currentRule)
+    console.log(oldRuleString)
     content = content.replace(oldRuleString, '')
 
     await writeFile(this.configService.get<string>('CONFIG_FILE_PATH'), content)

@@ -65,7 +65,7 @@ export class DockerService {
     return new Promise((resolve, reject) => {
       exec(`sudo docker compose -f ${ymlPath} -p ${createDto.serviceName} create`, (err) => {
         if(err) reject(new HttpException(`failed to create service, err: ${err}`, HttpStatus.INTERNAL_SERVER_ERROR))
-        resolve()
+        else resolve()
       })
     })
   }
@@ -81,26 +81,38 @@ export class DockerService {
     const {configFilePath} = await this.findByName(name)
     rmSync(configFilePath)
 
-    return new Promise((resolve) => {
-      exec(`sudo docker compose -p ${name} down`, () => resolve())
+    return new Promise((resolve, reject) => {
+      exec(`sudo docker compose -p ${name} down`, (err) => {
+        if(err) reject(new HttpException(`failed to delete service, err: ${err}`, HttpStatus.INTERNAL_SERVER_ERROR))
+        resolve()
+      })
     })
   }
 
   public async composeStart(name: string): Promise<void> {
-    return new Promise((resolve) => {
-      exec(`sudo docker compose -p ${name} start`, () => resolve())
+    return new Promise((resolve, reject) => {
+      exec(`sudo docker compose -p ${name} start`, (err) => {
+        if(err) reject(new HttpException(`failed to start service, err: ${err}`, HttpStatus.INTERNAL_SERVER_ERROR))
+        resolve()
+      })
     })
   }
 
   public async composeStop(name: string): Promise<void> {
-    return new Promise((resolve) => {
-      exec(`sudo docker compose -p ${name} stop`, () => resolve())
+    return new Promise((resolve, reject) => {
+      exec(`sudo docker compose -p ${name} stop`, (err) => {
+        if(err) reject(new HttpException(`failed to stop service, err: ${err}`, HttpStatus.INTERNAL_SERVER_ERROR))
+        resolve()
+      })
     })
   }
 
   public async composeRestart(name: string): Promise<void> {
-    return new Promise((resolve) => {
-      exec(`sudo docker compose -p ${name} restart`, () => resolve())
+    return new Promise((resolve, reject) => {
+      exec(`sudo docker compose -p ${name} restart`, (err) => {
+        if(err) reject(new HttpException(`failed to restart service, err: ${err}`, HttpStatus.INTERNAL_SERVER_ERROR))
+        resolve()
+      })
     })
   }
 
