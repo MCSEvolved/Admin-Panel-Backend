@@ -48,6 +48,11 @@ export class DockerController {
     return this.dockerService.composeRestart(name)
   }
 
+  @Patch('/:name/reset')
+  async resetService(@Param('name') name: string): Promise<void> {
+    return this.dockerService.reset(name)
+  }
+
   @Delete('/:name')
   async deleteById(@Param('name') name: string): Promise<void> {
     return this.dockerService.delete(name)
