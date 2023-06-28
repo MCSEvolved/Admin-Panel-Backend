@@ -140,8 +140,8 @@ export class DockerService {
       })
     }
     if (composeConfig.volumes) {
-      Object.values(composeConfig.volumes).forEach(volume => {
-        if (volume?.external) throw new HttpException(`external volumes are not allowed`, HttpStatus.BAD_REQUEST)
+      Object.entries(composeConfig.volumes).forEach(([volume_name, volume]) => {
+        if (volume?.external && ((volume.name !== undefined && volume.name !== "firebase-cert") || (!volume.name && volume_name !== "firebase-cert"))) throw new HttpException(`only firebase-cert is allowed as external volume`, HttpStatus.BAD_REQUEST)
       })
     }
     return composeConfig;
