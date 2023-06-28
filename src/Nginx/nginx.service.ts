@@ -21,7 +21,7 @@ export class NginxService {
 
   private parseRules(configString: string): NginxRo[] {
     const matches = configString.matchAll(
-      /#id=(?<id>.*)\n\s*#serviceName=(?<serviceName>.+)\n\s*location (?<location>.+) {\n\s*proxy_pass http:\/\/localhost:(?<port>[0-9]+);.*\n.*}(?<websocketsEnabled>\n.*location \/.*\/ws .*{\n.*proxy_pass http:\/\/localhost:....\/ws;)?/g
+      /#id=(?<id>.*)\n\s*#serviceName=(?<serviceName>.+)\n\s*location (?<location>.+) {\n\s*proxy_pass http:\/\/localhost:(?<port>[0-9]+);.*\n.*}(?<websocketsEnabled>\n.*location \/.*\/ws .*{\n.*proxy_pass http:\/\/localhost:.*\/ws;)?/g
     )
     const rules: NginxRo[] = []
     for(const match of matches) {
@@ -47,7 +47,7 @@ export class NginxService {
     if(rule.websocketsEnabled) {
       ruleString += `
     location ${rule.location}/ws {
-      proxy_pass http://localhost:${rule.port}/ws;
+      proxy_pass http://localhost:${rule.port}${rule.location}/ws;
       proxy_http_version 1.1;
       proxy_set_header Upgrade $http_upgrade;
       proxy_set_header Connection "upgrade";
