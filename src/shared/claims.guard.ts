@@ -18,10 +18,9 @@ export class ClaimsGuard implements CanActivate {
             const claims = await axios.get<ClaimsRo>("https://api.mcsynergy.nl/auth/get-user-claims", {
                 headers: {Authorization: request.headers.authorization}
             })
-            console.log(claims.data)
             return this.roles.includes(claims.data.role);
         } catch (err) {
-            throw new HttpException(err, HttpStatus.UNAUTHORIZED)
+            throw new HttpException("failed to get claims", HttpStatus.UNAUTHORIZED, {cause: err})
         }
     }
 }
