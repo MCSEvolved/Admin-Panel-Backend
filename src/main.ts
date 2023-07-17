@@ -8,7 +8,7 @@ async function bootstrap() {
   app.useGlobalPipes(new ValidationPipe({whitelist: true}))
   app.setGlobalPrefix('admin-panel')
   app.useGlobalGuards(new ClaimsGuard(['isAdmin']))
-  app.enableCors({origin: [/http\:\/\/localhost\:\d+/, "https://mcsynergy.nl"]})
+  app.enableCors({origin: [/http\:\/\/localhost\:\d+/, "https://mcsynergy.nl", "https://dev.mcsynergy.nl"]})
   await app.listen(3000);
 }
 bootstrap();
