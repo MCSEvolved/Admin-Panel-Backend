@@ -1,16 +1,21 @@
-import { Module } from '@nestjs/common';
+import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
-import {NginxModule} from "./Nginx/nginx.module";
+import { NginxModule } from './Nginx/nginx.module';
 import { DockerModule } from './Docker/docker.module';
+import { LoggerMiddleware } from './shared/LoggerMiddleware';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       envFilePath: `env/${process.env.NODE_ENV}.env`,
-      isGlobal: true
+      isGlobal: true,
     }),
     NginxModule,
-    DockerModule
-  ]
+    DockerModule,
+  ],
 })
-export class AppModule {}
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer): void {
+    consumer.apply(LoggerMiddleware).forRoutes('*');
+  }
+}
