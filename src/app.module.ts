@@ -2,7 +2,6 @@ import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { NginxModule } from './Nginx/nginx.module';
 import { DockerModule } from './Docker/docker.module';
-import { LoggerMiddleware } from './shared/LoggerMiddleware';
 
 @Module({
   imports: [
@@ -14,5 +13,4 @@ import { LoggerMiddleware } from './shared/LoggerMiddleware';
     DockerModule,
   ],
 })
-export class AppModule implements NestModule {
-}
+export class AppModule { }
