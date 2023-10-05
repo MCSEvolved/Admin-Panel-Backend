@@ -51,7 +51,13 @@ export class DockerService {
       let allLogs = ""
       const cmd = spawn("/bin/docker", ['compose', '--ansi=always', '-p', name, 'logs'])
         .on("exit", () => resolve(allLogs))
-      cmd.stdout.on('data', data => { allLogs += convert.toHtml(`${data}`) })
+      cmd.stdout.on('data', data => {
+        try {
+          allLogs += convert.toHtml(`${data} `)
+        } catch (e) {
+          console.error(e)
+        }
+      })
     })
   }
 
