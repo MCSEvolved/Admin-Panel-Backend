@@ -5,7 +5,7 @@ import {
   HttpException,
   HttpStatus,
 } from '@nestjs/common';
-import axios from 'axios';
+import axios, {AxiosError} from 'axios';
 
 interface ClaimsRo {
   email: string;
@@ -27,6 +27,9 @@ export class ClaimsGuard implements CanActivate {
       );
       return this.roles.includes(claims.data.role);
     } catch (err) {
+      if(err instanceof AxiosError) {
+        err = err.response.data
+      }
       throw new HttpException('failed to get claims', HttpStatus.UNAUTHORIZED, {
         cause: err,
       });
