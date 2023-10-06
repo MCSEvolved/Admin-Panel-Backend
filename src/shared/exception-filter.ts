@@ -21,7 +21,8 @@ export class AllExceptionsFilter implements ExceptionFilter {
       exception instanceof HttpException
         ? exception.getStatus()
         : HttpStatus.INTERNAL_SERVER_ERROR;
-    logger.error(`[${httpStatus}] ${exception['message']}`)
+
+    logger.error(`[${httpStatus}] ${exception['message']}` + exception["cause"] ? ` cause: ${exception["cause"]}` : "")
 
     httpAdapter.reply(ctx.getResponse(), exception['response'], httpStatus);
   }
